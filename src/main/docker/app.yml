@@ -1,0 +1,36 @@
+version: '2'
+services:
+    helloworld-app:
+        image: helloworld
+        environment:
+            - SPRING_PROFILES_ACTIVE=prod,swagger
+            - SPRING_DATA_CASSANDRA_CONTACTPOINTS=helloworld-cassandra
+            - JHIPSTER_SLEEP=30 # gives time for the Cassandra cluster to start and execute the migration scripts
+            - SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS=kafka
+            - SPRING_CLOUD_STREAM_KAFKA_BINDER_ZK_NODES=zookeeper
+        ports:
+            - 8080:8080
+    helloworld-cassandra:
+        extends:
+            file: cassandra-cluster.yml
+            service: helloworld-cassandra
+    helloworld-cassandra-node:
+        image: cassandra:3.9
+        environment:
+            - CASSANDRA_SEEDS=helloworld-cassandra
+    helloworld-cassandra-migration:
+        extends:
+            file: cassandra-migration.yml
+            service: helloworld-cassandra-migration
+        environment:
+            - CREATE_KEYSPACE_SCRIPT=create-keyspace-prod.cql
+    kafka:
+        extends:
+            file: kafka.yml
+            service: kafka
+        environment:
+            - KAFKA_ADVERTISED_HOST_NAME=kafka
+    zookeeper:
+        extends:
+            file: kafka.yml
+            service: zookeeper
